@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "VMware Paste Helper",
+  "version": "1.0",
+  "description": "Ajuda a colar texto em consoles web (como VMware) simulando digitação.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Colar no Console"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_script.js"]
+    }
+  ]
+}
