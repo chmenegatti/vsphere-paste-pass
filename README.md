@@ -67,7 +67,7 @@ graph TD
 2. Digite `edge://extensions/` na barra de endereços
 3. Ative o **"Modo de desenvolvedor"** (canto inferior esquerdo)
 4. Clique em **"Carregar sem compactação"**
-5. Navegue até `/home/cesar/js/copy-paste-vm` e selecione a pasta
+5. Navegue até `/home/{sua-pasta}/copy-paste-vm` e selecione a pasta
 
 ### Google Chrome
 
