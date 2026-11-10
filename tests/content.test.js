@@ -70,3 +70,13 @@ test("ação desconhecida é ignorada", () => {
   const { controller } = setup();
   assert.equal(controller.handle({ action: "outra" }), undefined);
 });
+
+test("vmpaste:cancel cancela a digitação ativa", () => {
+  const { controller, typers } = setup();
+  assert.deepEqual(controller.handle({ action: "vmpaste:cancel" }), { ok: false, error: "Nenhuma digitação em andamento" });
+  controller.handle(msg());
+  let cancelled = 0;
+  typers[0].cancel = () => cancelled++;
+  assert.deepEqual(controller.handle({ action: "vmpaste:cancel" }), { ok: true });
+  assert.equal(cancelled, 1);
+});

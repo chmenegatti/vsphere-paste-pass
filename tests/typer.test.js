@@ -120,3 +120,37 @@ test("progresso informa linha, total e estado final", async () => {
   const last = progress.at(-1);
   assert.deepEqual([last.line, last.lines, last.done, last.total, last.state], [2, 2, 4, 4, "done"]);
 });
+
+test("step: solta Shift antes de esperar o Enter do usuário", async () => {
+  const { typer, progress, released } = setup('A\nb', "step");
+  const done = typer.start();
+  await flush();
+  assert.equal(progress.at(-1).state, "waiting");
+  assert.equal(released(), 1);
+  typer.cancel();
+  await done;
+});
+
+test("pause: solta Shift ao pausar", async () => {
+  const w = manualWait();
+  const { typer, progress, released } = setup("AB", "all", { keyDelay: 5, wait: w.wait });
+  const done = typer.start();
+  await flush();
+  typer.pause();
+  await w.tick();
+  assert.equal(progress.at(-1).state, "paused");
+  assert.equal(released(), 1);
+  typer.cancel();
+  await done;
+});
+
+test("atraso 0 ainda cede a vez entre teclas (permite cancelar)", async () => {
+  const w = manualWait();
+  const { typer, sent } = setup("abc", "all", { keyDelay: 0, wait: w.wait });
+  const done = typer.start();
+  await flush();
+  assert.deepEqual(sent, ["KeyA"]);
+  typer.cancel();
+  await w.tick();
+  assert.equal(await done, "cancelled");
+});

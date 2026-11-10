@@ -58,7 +58,14 @@
     main.addEventListener("click", () => mainAction && mainAction());
     cancel.addEventListener("click", () => onCancel());
 
-    document.documentElement.appendChild(host);
+    // Em tela cheia só o elemento em tela cheia é desenhado: o painel vai junto.
+    function place() {
+      const fs = document.fullscreenElement;
+      const usable = fs && !["CANVAS", "VIDEO", "IFRAME"].includes(fs.tagName);
+      (usable ? fs : document.documentElement).appendChild(host);
+    }
+    document.addEventListener("fullscreenchange", place);
+    place();
 
     function update(p, mode) {
       const pos = mode === "password"
@@ -91,6 +98,7 @@
 
     function remove() {
       clearTimeout(removeTimer);
+      document.removeEventListener("fullscreenchange", place);
       host.remove();
     }
 
