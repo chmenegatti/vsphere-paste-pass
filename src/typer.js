@@ -22,6 +22,7 @@
     // Bloqueia enquanto pausado; retorna true se cancelado.
     async function gate() {
       while (paused && !cancelled) {
+        releaseShift(); // não deixa Shift preso no convidado durante a pausa
         report("paused");
         await new Promise((r) => (resumeGate = r));
       }
@@ -44,11 +45,13 @@
           send(s);
           done++;
           report();
-          if (keyDelay > 0) await wait(keyDelay);
+          // Sempre cede a vez (mesmo com atraso 0) para Pausar/Cancelar funcionarem.
+          await wait(Math.max(0, keyDelay || 0));
         }
         if (i === lines - 1) break;
 
         if (mode === "step") {
+          releaseShift(); // o Enter real do usuário não pode virar Shift+Enter
           report("waiting");
           const sendEnter = await new Promise((r) => (stepGate = r));
           stepGate = null;

@@ -15,11 +15,14 @@
     enterPauseWrap: $("enterPauseWrap"),
     warning: $("warning"),
     status: $("status"),
-    button: $("typeButton")
+    button: $("typeButton"),
+    cancel: $("cancelButton")
   };
 
   const settings = await V.loadSettings(storage);
-  let confirmed = false; // segundo clique após aviso
+  // Aviso confirmado vale só para exatamente este texto/layout/aba.
+  let confirmedKey = null;
+  const warningKey = () => [currentKind(), settings.layout, currentText()].join("\n");
 
   const save = (partial) => {
     Object.assign(settings, partial);
@@ -43,6 +46,7 @@
     els.tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
     els.panels.forEach((p) => (p.hidden = p.dataset.panel !== name));
     save({ lastTab: name });
+    clearWarning();
     refresh();
     (name === "password" ? els.password : els.long).focus();
   }
@@ -58,7 +62,7 @@
   }
 
   function clearWarning() {
-    confirmed = false;
+    confirmedKey = null;
     els.warning.hidden = true;
     els.warning.textContent = "";
   }
@@ -72,7 +76,7 @@
     const a = V.analyze(els.long.value, settings.layout);
     els.longMeta.textContent = `${plural(a.lines, "linha", "linhas")} · ${plural(a.chars, "caractere", "caracteres")}`;
     els.enterPauseWrap.hidden = !(kind === "long" && settings.mode === "all");
-    if (!confirmed) {
+    if (!confirmedKey) {
       els.button.textContent = kind === "long" && a.lines > 0
         ? `Digitar ${plural(a.lines, "linha", "linhas")}`
         : "Digitar no console";
@@ -87,18 +91,22 @@
 
   function showWarning(a, text) {
     const parts = [];
-    if (a.unsupported.length) {
+    const skipped = countSkipped(text, a.unsupported);
+    const layoutName = settings.layout === "en-us" ? "EN-US" : "ABNT2";
+    if (a.unsupported.length && currentKind() === "password") {
+      // Nunca mostra caracteres da senha em claro.
+      parts.push(`A senha tem ${plural(skipped, "caractere não suportado", "caracteres não suportados")} em ${layoutName}`);
+    } else if (a.unsupported.length) {
       const list = a.unsupported.map((c) => `<code>${escapeHtml(c)}</code>`).join(" ");
-      parts.push(`Não suportados em ${settings.layout === "en-us" ? "EN-US" : "ABNT2"}: ${list}`);
+      parts.push(`Não suportados em ${layoutName}: ${list}`);
     }
     if (a.hasTabs) parts.push("Contém Tabs: podem acionar o autocompletar do shell");
     els.warning.innerHTML = parts.join("<br>");
     els.warning.hidden = false;
-    const skipped = countSkipped(text, a.unsupported);
     els.button.textContent = skipped
       ? `Digitar pulando ${plural(skipped, "caractere", "caracteres")}`
       : "Digitar mesmo assim";
-    confirmed = true;
+    confirmedKey = warningKey();
   }
 
   function escapeHtml(s) {
@@ -114,7 +122,7 @@
       return;
     }
     const a = V.analyze(text, settings.layout);
-    if (!confirmed && (a.unsupported.length || a.hasTabs)) {
+    if (confirmedKey !== warningKey() && (a.unsupported.length || a.hasTabs)) {
       showWarning(a, text);
       return;
     }
@@ -135,6 +143,7 @@
       });
       if (!res || !res.ok) {
         setStatus((res && res.error) || "Falha ao iniciar a digitação", "error");
+        els.cancel.hidden = !(res && res.error === "Digitação em andamento");
         els.button.disabled = false;
         return;
       }
@@ -174,6 +183,18 @@
   });
 
   els.button.addEventListener("click", send);
+
+  // Cancela pelo popup quando o painel da página não está visível (ex.: tela cheia).
+  els.cancel.addEventListener("click", async () => {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      await chrome.tabs.sendMessage(tab.id, { action: "vmpaste:cancel" });
+      setStatus("Digitação cancelada", "success");
+    } catch (_) {
+      setStatus("Recarregue a página do console e tente de novo.", "error");
+    }
+    els.cancel.hidden = true;
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();

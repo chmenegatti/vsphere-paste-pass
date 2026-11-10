@@ -4,7 +4,13 @@
     let typer = null;
 
     function handle(msg) {
-      if (!msg || msg.action !== "vmpaste:start") return undefined;
+      if (!msg) return undefined;
+      if (msg.action === "vmpaste:cancel") {
+        if (!typer) return { ok: false, error: "Nenhuma digitação em andamento" };
+        typer.cancel();
+        return { ok: true };
+      }
+      if (msg.action !== "vmpaste:start") return undefined;
       if (typer) return { ok: false, error: "Digitação em andamento" };
 
       const plan = deps.buildPlan(msg.text, msg.layout, msg.kind);

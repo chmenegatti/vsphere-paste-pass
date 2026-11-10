@@ -116,6 +116,13 @@ body {
 .status.error { color: var(--error); }
 .status.success { color: var(--success); }
 
+.secondary {
+  padding: 9px; border: 1px solid var(--outline); border-radius: 20px;
+  background: transparent; color: var(--error);
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.secondary[hidden] { display: none; }
+
 .primary {
   padding: 11px; border: 0; border-radius: 20px;
   background: var(--primary); color: var(--on-primary);
