@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>VM Paste</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="card">
+    <header class="header">
+      <h1>VM Paste</h1>
+      <span class="hint">Ctrl+Enter digita</span>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" class="tab" data-tab="password" id="tab-password">Senha</button>
+      <button type="button" role="tab" class="tab" data-tab="long" id="tab-long">Texto longo</button>
+    </nav>
+
+    <section class="panel" data-panel="password" role="tabpanel" aria-labelledby="tab-password">
+      <div class="field field-row">
+        <input type="password" id="passwordInput" placeholder="Cole a senha aqui" autocomplete="off" spellcheck="false">
+        <button type="button" class="icon-btn" id="toggleVisibility" title="Mostrar senha" aria-label="Mostrar senha">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 5c-5 0-9.3 3.1-11 7 1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="long" role="tabpanel" aria-labelledby="tab-long" hidden>
+      <textarea id="longInput" class="field mono" rows="7" placeholder="Cole comandos ou script aqui" spellcheck="false"></textarea>
+      <div class="meta" id="longMeta">0 linhas · 0 caracteres</div>
+      <label class="label">Modo</label>
+      <div class="segmented" id="modeSeg">
+        <button type="button" data-value="all">Tudo de uma vez</button>
+        <button type="button" data-value="step">Passo a passo</button>
+      </div>
+    </section>
+
+    <label class="label">Teclado do destino</label>
+    <div class="segmented" id="layoutSeg">
+      <button type="button" data-value="abnt2">ABNT2</button>
+      <button type="button" data-value="en-us">EN-US</button>
+    </div>
+
+    <div class="numbers">
+      <label class="num">
+        <span class="label">Atraso entre teclas (ms)</span>
+        <input type="number" id="keyDelay" min="0" max="2000" step="5" class="field">
+      </label>
+      <label class="num" id="enterPauseWrap">
+        <span class="label">Pausa após Enter (ms)</span>
+        <input type="number" id="enterPause" min="0" max="60000" step="100" class="field">
+      </label>
+    </div>
+
+    <div class="warning" id="warning" hidden></div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+
+    <button type="button" class="primary" id="typeButton">Digitar no console</button>
+  </main>
+
+  <script src="../src/keymaps.js"></script>
+  <script src="../src/text-plan.js"></script>
+  <script src="../src/settings.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

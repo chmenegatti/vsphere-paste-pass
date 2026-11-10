@@ -1,0 +1,38 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="60" fill="url(#grad1)"/>
+  
+  <!-- Lock Icon -->
+  <g transform="translate(64, 64)">
+    <!-- Lock Body -->
+    <rect x="-18" y="5" width="36" height="30" rx="4" fill="white" opacity="0.95"/>
+    
+    <!-- Lock Shackle -->
+    <path d="M -12 5 L -12 -5 A 12 12 0 0 1 12 -5 L 12 5" 
+          fill="none" 
+          stroke="white" 
+          stroke-width="6" 
+          opacity="0.95"/>
+    
+    <!-- Keyhole -->
+    <circle cx="0" cy="15" r="4" fill="#667eea"/>
+    <rect x="-1.5" y="17" width="3" height="8" fill="#667eea"/>
+    
+    <!-- Keyboard Keys (small indicators) -->
+    <g transform="translate(-25, -25)">
+      <rect x="0" y="0" width="8" height="8" rx="1.5" fill="white" opacity="0.6"/>
+      <rect x="10" y="0" width="8" height="8" rx="1.5" fill="white" opacity="0.7"/>
+      <rect x="20" y="0" width="8" height="8" rx="1.5" fill="white" opacity="0.8"/>
+    </g>
+  </g>
+  
+  <!-- Outer Glow -->
+  <circle cx="64" cy="64" r="60" fill="none" stroke="white" stroke-width="2" opacity="0.3"/>
+</svg>
