@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Edge%20%7C%20Chrome-purple.svg)
 
@@ -36,12 +36,15 @@ flowchart LR
 
 ### ✨ Funcionalidades
 
-- 🔒 **Campo de senha seguro** com alternância de visibilidade
-- ⚡ **Controle de velocidade** - ajuste o atraso entre teclas
-- 🎯 **Detecção automática** do elemento canvas do console
-- ⌨️ **Suporte completo** a caracteres especiais e modificadores (Shift)
-- 🎨 **Interface moderna** com gradientes e animações suaves
-- 📦 **Leve e rápido** - menos de 50KB total
+- ⌨️ **Teclado do destino ABNT2 ou EN-US** - escolha o layout da VM e `/`, `{`, `}`, `:` etc. chegam certos
+- 🇧🇷 **Acentos no ABNT2** - `é`, `ã`, `ô`, `à`, `ü` digitados como acento + letra
+- 📜 **Aba "Texto longo"** - comandos e scripts (bash, PowerShell) linha a linha
+- 🪜 **Dois modos** - *Tudo de uma vez* (com pausa após cada Enter) ou *Passo a passo* (você confere e aperta Enter)
+- 📊 **Painel de progresso na página** - pausar, retomar, cancelar e "Próxima linha"
+- ⚠️ **Aviso antes de digitar** - lista caracteres que o layout escolhido não consegue enviar
+- 🔒 **Campo de senha** oculto, pré-preenchido com a área de transferência
+- 🎨 **Visual Material You** com tema claro e escuro automático
+- 💾 **Preferências lembradas** (layout, atrasos, modo) - senha e texto nunca são salvos
 
 ---
 
@@ -111,15 +114,19 @@ sequenceDiagram
 
 ### Passo a Passo
 
-1. **Acesse o console web** da sua VM (VMware, Proxmox, etc.)
+1. **Acesse o console web** da sua VM (VMware, Proxmox, etc.) e clique dentro dele
 2. **Clique no ícone** da extensão na barra de ferramentas
-3. **Cole sua senha** no campo (ela ficará oculta por padrão)
-4. **Ajuste o atraso** se necessário:
+3. Escolha o **Teclado do destino**: `ABNT2` ou `EN-US` (o layout configurado na VM)
+4. **Senha:** cole no campo (fica oculta por padrão)
+   **Texto longo:** cole os comandos e escolha o modo:
+   - **Tudo de uma vez** - digita linha, Enter, espera a *Pausa após Enter*, próxima linha
+   - **Passo a passo** - digita uma linha e espera você apertar Enter no console (ou clicar *Próxima linha* no painel)
+   - A **última linha nunca recebe Enter**: você confere e executa
+5. **Ajuste o atraso** se necessário:
    - `10ms` - Conexões rápidas (padrão)
    - `50-100ms` - Se caracteres estiverem sendo perdidos
    - `100-200ms` - Conexões lentas ou VMs sobrecarregadas
-5. **Clique em "✨ Digitar no Console"**
-6. **Aguarde** a digitação ser concluída
+6. Clique em **Digitar** (ou `Ctrl+Enter`). O popup fecha e o progresso aparece no canto da página
 
 ---
 
@@ -127,27 +134,25 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "Popup Interface"
-        A[popup.html<br/>Interface Visual] --> B[popup.js<br/>Lógica da UI]
+    subgraph "Popup"
+        A[popup/popup.html<br/>popup.css] --> B[popup/popup.js]
+        S[src/settings.js<br/>chrome.storage] --> B
     end
-    
-    subgraph "Background"
-        C[manifest.json<br/>Configuração]
+
+    subgraph "Content Script (ordem do manifest)"
+        K[src/keymaps.js<br/>ABNT2 / EN-US] --> P[src/text-plan.js<br/>normaliza + plano]
+        P --> C[src/content.js<br/>controller]
+        T[src/typer.js<br/>linhas, pausa, passo a passo] --> C
+        D[src/dispatch.js<br/>KeyboardEvent + Shift] --> C
+        O[src/overlay.js<br/>painel Shadow DOM] --> C
     end
-    
-    subgraph "Content Script"
-        D[content_script.js<br/>Simulação de Teclado]
-    end
-    
-    B -->|chrome.tabs.sendMessage| D
-    C -.->|Configura| A
-    C -.->|Injeta| D
-    D -->|KeyboardEvent| E[🖥️ Console Canvas]
-    
-    style A fill:#667eea,stroke:#333,stroke-width:2px,color:#fff
-    style B fill:#764ba2,stroke:#333,stroke-width:2px,color:#fff
-    style C fill:#10b981,stroke:#333,stroke-width:2px,color:#fff
-    style D fill:#f59e0b,stroke:#333,stroke-width:2px,color:#fff
+
+    B -->|vmpaste:start| C
+    C -->|KeyboardEvent| E[🖥️ Console Canvas]
+
+    style A fill:#6750a4,stroke:#333,stroke-width:2px,color:#fff
+    style B fill:#6750a4,stroke:#333,stroke-width:2px,color:#fff
+    style C fill:#7d5260,stroke:#333,stroke-width:2px,color:#fff
     style E fill:#ef4444,stroke:#333,stroke-width:2px,color:#fff
 ```
 
@@ -156,9 +161,24 @@ graph TB
 | Arquivo | Função |
 |---------|--------|
 | `manifest.json` | 📋 Configuração da extensão (Manifest V3) |
-| `popup.html` | 🎨 Interface visual do popup |
-| `popup.js` | ⚙️ Lógica de controle e comunicação |
-| `content_script.js` | ⌨️ Motor de simulação de teclado |
+| `popup/` | 🎨 Interface (abas Senha / Texto longo, Material You) |
+| `src/keymaps.js` | ⌨️ Mapas ABNT2 e EN-US, composição de acentos |
+| `src/text-plan.js` | 🧹 Normaliza quebras de linha, detecta não suportados, monta o plano |
+| `src/dispatch.js` | 🎹 Dispara eventos de teclado e controla o Shift |
+| `src/typer.js` | ⏯️ Motor de digitação (modos, pausa, cancelamento) |
+| `src/overlay.js` | 📊 Painel de progresso injetado na página |
+| `src/content.js` | 🔌 Recebe a mensagem do popup e conduz a digitação |
+| `src/settings.js` | 💾 Preferências salvas |
+| `tests/` | ✅ Testes (`node --test`) |
+| `icons/` | 🎨 Ícones da extensão |
+
+### 🧪 Testes
+
+Sem dependências: usa o test runner nativo do Node.
+
+```bash
+node --test
+```
 
 ---
 
@@ -177,12 +197,15 @@ graph TB
 2. Recarregue a página do console
 3. Verifique o console do navegador (F12) por erros
 
+### ❓ Caracteres saem trocados (ex.: `/` some, `}` vira `|`)?
+
+**Solução:** o **Teclado do destino** não bate com o layout configurado na VM. Troque entre `ABNT2` e `EN-US`.
+
 ### ❓ Alguns caracteres especiais não funcionam?
 
-**Solução:** 
-- A extensão suporta a maioria dos caracteres ASCII
-- Evite usar caracteres Unicode complexos em senhas
-- Teste com senhas contendo: `a-zA-Z0-9!@#$%^&*()_+-=[]{}|;:',.<>?/`
+**Solução:**
+- O aviso antes de digitar lista o que o layout escolhido não suporta (ex.: acentos e `ç` no EN-US)
+- Ao confirmar, esses caracteres são pulados
 
 ### ❓ A extensão não aparece na barra?
 
@@ -218,17 +241,19 @@ graph TB
 
 ### Simulação de Teclado
 
-A extensão envia eventos de teclado completos para garantir compatibilidade:
+Os mapas enviam o `code`/`keyCode` da **tecla física** do layout escolhido (consoles como o VMware traduzem isso em scancode). Sequência por tecla:
 
 ```javascript
 keydown → keypress → input → keyup
 ```
 
-Para caracteres com Shift (ex: `!`, `@`, `A-Z`):
+Shift é pressionado/solto só na transição entre caracteres com e sem Shift. No ABNT2, acentos são dead key + letra (`´` + `e` → `é`); uma dead key isolada (`~`, `^`) é seguida de espaço para não combinar com a próxima letra.
 
-```javascript
-Shift keydown → Key keydown → Key keypress → Key keyup → Shift keyup
-```
+### Texto Longo
+
+- `\r\n` (Windows) conta como um Enter só; uma quebra de linha no final é removida
+- Enter entre linhas, nunca após a última
+- No passo a passo, o Enter **real** do usuário (`isTrusted`) libera a próxima linha
 
 ### Detecção de Alvo
 
